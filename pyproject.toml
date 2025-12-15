@@ -1,0 +1,18 @@
+[project]
+name = "options-prediction"
+version = "0.1.0"
+description = "LLM-driven earnings prediction and backtesting toolkit"
+authors = [{name = "Auto-generated"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "yfinance>=0.2",
+    "pandas>=2.1",
+]
+
+[project.scripts]
+options-prediction = "options_prediction.cli:main"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
