@@ -35,12 +35,18 @@ def average_accuracy(entries: List[RunLogEntry]) -> float:
     return sum(e.accuracy for e in entries) / len(entries)
 
 
-def iterative_cycle(config: AppConfig = DEFAULT_CONFIG) -> None:
+def iterative_cycle(config: AppConfig = DEFAULT_CONFIG, tickers: Iterable[str] | None = None) -> None:
     config.ensure_paths()
     start = time.monotonic()
-    universe = build_universe(config.data, config.run.cache_dir)
-    if config.data.max_tickers:
+    universe = list(tickers) if tickers is not None else build_universe(config.data, config.run.cache_dir)
+    if config.data.max_tickers and tickers is None:
         universe = universe[: config.data.max_tickers]
+    if not universe:
+        append_notes(
+            config.run.notes_path,
+            ["No tickers available for backtest; verify network access and market cap filters."],
+        )
+        return
     while time.monotonic() - start < config.run.duration.total_seconds():
         run_once(config, universe)
         if not config.run.iterative:
@@ -51,6 +57,12 @@ def backtest_once(config: AppConfig = DEFAULT_CONFIG, tickers: Iterable[str] | N
     config.ensure_paths()
     if tickers is None:
         tickers = build_universe(config.data, config.run.cache_dir)
+    if not tickers:
+        append_notes(
+            config.run.notes_path,
+            ["No tickers available for single-pass backtest; verify data filters or provide --tickers."],
+        )
+        return []
     return run_once(config, tickers)
 
 

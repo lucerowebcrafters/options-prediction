@@ -28,10 +28,16 @@ Add a learning note for future prompts:
 options-prediction add-note "Focus on EPS surprises over 5%"
 ```
 
+If you want to bypass universe construction and target explicit tickers, pass a comma-separated list:
+```bash
+options-prediction backtest --iterative false --tickers AAPL,MSFT,GOOGL
+```
+
 ## Configuration highlights
 - Adjust market cap filters, lookback years, and ticker limits via CLI flags.
 - Notes and run logs are stored locally under `notes/` by default.
 - Swap in a real LLM provider by implementing `LLMClient` in `src/options_prediction/llm.py`.
+- The CLI now checks for `pandas` and `yfinance` before running and will exit early with a clear message if they are missing.
 
 ## Caveats
 - Network access is required for Yahoo Finance calls.

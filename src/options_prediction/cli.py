@@ -6,6 +6,7 @@ from typing import Optional
 
 import typer
 
+from .checks import MissingDependencyError, require_packages
 from .config import AppConfig, DataConfig, LLMConfig, RunConfig
 from .runner import backtest_once, iterative_cycle, save_custom_notes
 
@@ -36,13 +37,21 @@ def backtest(
     market_cap: float = typer.Option(1_000_000_000, help="Minimum market cap filter."),
     lookback_years: int = typer.Option(2, help="Years of history for earnings events."),
     max_tickers: Optional[int] = typer.Option(None, help="Limit number of tickers for quick runs."),
+    tickers: Optional[str] = typer.Option(None, help="Comma-separated tickers to override universe selection."),
 ) -> None:
     """Run a backtest across NASDAQ tickers."""
     config = build_config(duration_minutes, iterative, max_tickers=max_tickers, market_cap=market_cap, lookback_years=lookback_years)
+    custom_tickers = [t.strip().upper() for t in tickers.split(",")] if tickers else None
+    try:
+        require_packages(["pandas", "yfinance"])
+    except MissingDependencyError as exc:  # pragma: no cover - CLI safety path
+        typer.echo(str(exc))
+        raise typer.Exit(code=1)
+
     if iterative:
-        iterative_cycle(config)
+        iterative_cycle(config, tickers=custom_tickers)
     else:
-        backtest_once(config)
+        backtest_once(config, tickers=custom_tickers)
 
 
 @app.command()
