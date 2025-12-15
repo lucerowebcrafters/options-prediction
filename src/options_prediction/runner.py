@@ -18,9 +18,21 @@ def run_once(config: AppConfig, tickers: Iterable[str]) -> List[RunLogEntry]:
         results = backtester.backtest_symbol(symbol)
         summary = backtester.summarize(results)
         notes = f"Predictions={summary['total_predictions']} accuracy={summary['accuracy']:.2%}"
+        print(
+            f"[backtest] {symbol}: {summary['correct']}/{summary['total_predictions']} correct; accuracy "
+            f"{summary['accuracy']:.1%}"
+        )
         log_entries.append(
             RunLogEntry(timestamp=dt.datetime.utcnow(), ticker=symbol, accuracy=summary["accuracy"], notes=notes)
         )
+        if results:
+            for res in results:
+                print(
+                    f"  - {res.earnings_date.date()} pre={res.pre_close} post={res.post_close} "
+                    f"actual={res.actual_direction} predicted={res.predicted_direction} ({res.confidence:.0%})"
+                )
+        else:
+            print("  - No earnings events found; skipped")
     append_run_log(config.run.log_path, log_entries)
     append_notes(
         config.run.notes_path,
@@ -57,13 +69,16 @@ def backtest_once(config: AppConfig = DEFAULT_CONFIG, tickers: Iterable[str] | N
     config.ensure_paths()
     if tickers is None:
         tickers = build_universe(config.data, config.run.cache_dir)
-    if not tickers:
+    tickers_list = list(tickers)
+    if not tickers_list:
         append_notes(
             config.run.notes_path,
             ["No tickers available for single-pass backtest; verify data filters or provide --tickers."],
         )
+        print("[backtest] No tickers available to process. Adjust filters or use --tickers.")
         return []
-    return run_once(config, tickers)
+    print(f"[backtest] Running single pass for {len(tickers_list)} tickers...")
+    return run_once(config, tickers_list)
 
 
 def save_custom_notes(path: Path, lines: Iterable[str]) -> None:
