@@ -6,8 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
-import pandas as pd
-
 from .config import AppConfig
 from .data import earnings_dates, end_of_day_close, price_on_dates
 from .predictor import Predictor
@@ -16,7 +14,7 @@ from .predictor import Predictor
 @dataclass
 class BacktestResult:
     ticker: str
-    earnings_date: pd.Timestamp
+    earnings_date: dt.datetime
     pre_close: float | None
     post_close: float | None
     direction: str
@@ -50,14 +48,14 @@ class Backtester:
 
     def backtest_symbol(self, symbol: str) -> List[BacktestResult]:
         results: List[BacktestResult] = []
-        events = earnings_dates(symbol, self.config.data.lookback_years)
-        if events.empty:
+        events = earnings_dates(symbol, self.config.data)
+        if not events:
             return results
-        earnings_days = events["earnings_date"].to_list()
-        prices = price_on_dates(symbol, earnings_days)
-        for _, row in events.iterrows():
-            date = row["earnings_date"]
-            eps_surprise = float(row.get("surprise", 0.0) or 0.0)
+        earnings_days = [event["earnings_date"] for event in events]
+        prices = price_on_dates(symbol, earnings_days, self.config.data)
+        for event in events:
+            date = event["earnings_date"]
+            eps_surprise = float(event.get("surprise", 0.0) or 0.0)
             closes = end_of_day_close(prices, date)
             if closes is None:
                 continue

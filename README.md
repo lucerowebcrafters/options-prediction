@@ -23,6 +23,15 @@ Run a single pass without iteration:
 ```bash
 options-prediction backtest --iterative false --max-tickers 5
 ```
+
+If you are in an offline or firewalled environment, use the bundled sample data to exercise the pipeline:
+```bash
+options-prediction backtest --iterative false --offline true --duration-minutes 1
+```
+When running directly from the source tree without installing the package, set `PYTHONPATH=src` and invoke the module:
+```bash
+PYTHONPATH=src python -m options_prediction.cli backtest --offline true --iterative false
+```
 Add a learning note for future prompts:
 ```bash
 options-prediction add-note "Focus on EPS surprises over 5%"
@@ -38,6 +47,7 @@ options-prediction backtest --iterative false --tickers AAPL,MSFT,GOOGL
 - Notes and run logs are stored locally under `notes/` by default.
 - Swap in a real LLM provider by implementing `LLMClient` in `src/options_prediction/llm.py`.
 - The CLI now checks for `pandas` and `yfinance` before running and will exit early with a clear message if they are missing.
+- Offline mode uses curated AAPL/MSFT sample earnings and price data under `sample_data/` so the program can run without network access.
 
 ## Caveats
 - Network access is required for Yahoo Finance calls.

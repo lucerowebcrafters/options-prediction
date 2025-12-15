@@ -14,6 +14,8 @@ class DataConfig:
     lookback_years: int = 2
     exchange: str = "NASDAQ"
     max_tickers: Optional[int] = None
+    offline_mode: bool = False
+    sample_data_dir: Path = Path("sample_data")
 
 
 @dataclasses.dataclass
@@ -40,9 +42,9 @@ class RunConfig:
 
 @dataclasses.dataclass
 class AppConfig:
-    data: DataConfig = DataConfig()
-    llm: LLMConfig = LLMConfig()
-    run: RunConfig = RunConfig()
+    data: DataConfig = dataclasses.field(default_factory=DataConfig)
+    llm: LLMConfig = dataclasses.field(default_factory=LLMConfig)
+    run: RunConfig = dataclasses.field(default_factory=RunConfig)
 
     def ensure_paths(self) -> None:
         self.run.notes_path.parent.mkdir(parents=True, exist_ok=True)
